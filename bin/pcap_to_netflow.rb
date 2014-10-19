@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'pcap'
+require 'json'
 
 class FlowProcessor 
 
@@ -28,9 +29,13 @@ class FlowProcessor
 			record[:src_addr] = pkt.src
 			record[:dst_addr] = pkt.dst
 
-			print "#{pkt.src.to_s.sub!(/\S{4}$/, '')}\n"
+			# print "#{pkt.src.to_s.sub!(/\S{4}$/, '')}\n"
 		end
 		return record
+	end
+
+	def flows
+		return @_flows
 	end
 
 	def size
@@ -43,10 +48,16 @@ class PacketProcessor
 
 	def initialize
 		@_cnt = 0
+		@_packets = []
 	end
 
 	def add_packet(pkt)
 		@_cnt = @_cnt +1
+		@_packets.push(pkt)
+	end
+
+	def packets
+		return @_packets
 	end
 
 	def size
@@ -56,7 +67,7 @@ class PacketProcessor
 end
 
 in_filename = 'data/LLS_DDOS_1.0-dmz.dump'
-out_filename = ''
+out_filename = 'data/dmz.json'
 
 inp = Pcap::Capture.open_offline in_filename
 flows = FlowProcessor.new
@@ -67,4 +78,9 @@ inp.loop(-1) do |pkt|
 	pkts.add_packet(pkt)
 end
 
+flow_json = JSON.generate(flows.flows)
+
 print "\nWe have a total of #{flows.size} flows over #{pkts.size} packets.\n"
+#print "#{flow_json}"
+
+File.open(out_filename, 'w') { |file| file.write(flow_json) }
