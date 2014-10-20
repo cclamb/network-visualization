@@ -3,19 +3,33 @@
 require 'pcap'
 require 'json'
 
+class FlowRecord
+	attr_accessor :src_port, :dst_port, :src_addr, :dst_addr
+
+	def initialize
+		@src_port = nil
+		@dst_port = nil
+		@src_addr = nil
+		@dst_addr = nil
+	end
+
+end
+
 class FlowProcessor 
 
 	def initialize
 		@_flows = {}
+		@_flow_records = []
 	end
 
 	def add_packet(pkt)
-		record = create_record pkt
+		record = create_record(pkt)
 		if @_flows.has_key? record then
 			idx = @_flows[record]
 			@_flows[record] = idx + 1
 		else
 			@_flows[record] = 0
+
 		end
 	end
 
