@@ -12,14 +12,23 @@ help = <<eos
 eos
 
 in_filename   = 'data/LLS_DDOS_1.0-inside.dump'
-dmz_filename  = 'data/LLS_DDOS_1.0-dmz.dump'
+dmz_filename  = 'data/dmz.json'
+
+file = File.open(dmz_filename, "rb")
+dmz_json = file.read
+file.close
+
+configure do
+	mime_type :json, 'application/json'
+end
 
 get '/' do
 	help
 end
 
 get '/dmz' do 
-  'dmz'
+	content_type :json
+	return dmz_json
 end
 
 get '/inside' do
