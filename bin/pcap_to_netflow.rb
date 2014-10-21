@@ -3,18 +3,6 @@
 require 'pcap'
 require 'json'
 
-class FlowRecord
-	attr_accessor :src_port, :dst_port, :src_addr, :dst_addr
-
-	def initialize
-		@src_port = nil
-		@dst_port = nil
-		@src_addr = nil
-		@dst_addr = nil
-	end
-
-end
-
 class FlowProcessor 
 
 	def initialize
@@ -29,23 +17,35 @@ class FlowProcessor
 			@_flows[record] = idx + 1
 		else
 			@_flows[record] = 0
-
+			@_flow_records.push(record) unless record[:protocol] == 'unknown'
 		end
 	end
 
 	def create_record(pkt)
-		record = {}
-		if pkt.tcp?
-			record[:src_port] = pkt.sport
-			record[:dst_port] = pkt.dport 
-		end
+		record = {:protocol => 'unknown'}
 		if pkt.ip?
-			record[:src_addr] = pkt.src
-			record[:dst_addr] = pkt.dst
+			record[:protocol] = 'IP'
+			record[:src_addr] = pkt.src.to_num_s
+			record[:dst_addr] = pkt.dst.to_num_s
 
 			# print "#{pkt.src.to_s.sub!(/\S{4}$/, '')}\n"
 		end
+		if pkt.tcp?
+			record[:protocol] = 'TCP'
+			record[:src_port] = pkt.sport
+			record[:dst_port] = pkt.dport 
+		end
+		if pkt.udp?
+			record[:protocol] = 'UDP'
+			record[:src_port] = pkt.sport
+			record[:dst_port] = pkt.dport 
+		end
+
 		return record
+	end
+
+	def flow_records
+		return @_flow_records
 	end
 
 	def flows
@@ -88,13 +88,13 @@ flows = FlowProcessor.new
 pkts = PacketProcessor.new
 inp.loop(-1) do |pkt|
 	print '.' if pkts.size % 10000 == 0
+	#break if pkts.size % 10000 == 0 && pkts.size != 0
 	flows.add_packet(pkt)
 	pkts.add_packet(pkt)
 end
 
-flow_json = JSON.generate(flows.flows)
+flow_json = JSON.pretty_generate(flows.flow_records)
 
 print "\nWe have a total of #{flows.size} flows over #{pkts.size} packets.\n"
-#print "#{flow_json}"
 
 File.open(out_filename, 'w') { |file| file.write(flow_json) }
