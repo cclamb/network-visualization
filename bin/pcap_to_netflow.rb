@@ -83,15 +83,21 @@ end
 in_filename = 'data/LLS_DDOS_1.0-dmz.dump'
 out_filename = 'data/dmz.json'
 
-inp = Pcap::Capture.open_offline in_filename
+inp = Pcap::Capture.open_offline(in_filename)
 flows = FlowProcessor.new
 pkts = PacketProcessor.new
 inp.loop(-1) do |pkt|
 	print '.' if pkts.size % 10000 == 0
-	#break if pkts.size % 10000 == 0 && pkts.size != 0
+	break if pkts.size % 10000 == 0 && pkts.size != 0
 	flows.add_packet(pkt)
 	pkts.add_packet(pkt)
 end
+
+# json_src = {}
+# json_src[:nodes] = flows.flow_records
+# flows.flow_records.each do |flow|
+
+# end
 
 flow_json = JSON.pretty_generate(flows.flow_records)
 

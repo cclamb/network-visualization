@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'sinatra'
+require 'sinatra/cross_origin'
 
 help = <<eos
 	This is the base service for PCAP data. Currently this is hosting data from the DARPA, hosted at Lincoln Labs.
@@ -11,15 +12,20 @@ help = <<eos
   <url>/inside for either DMZ tcpdump or internal tcpdump data.
 eos
 
-in_filename   = 'data/LLS_DDOS_1.0-inside.dump'
+in_filename   = 'data/inside.json'
 dmz_filename  = 'data/dmz.json'
 
 file = File.open(dmz_filename, "rb")
 dmz_json = file.read
 file.close
 
+file = File.open(in_filename, "rb")
+inside_json = file.read
+file.close
+
 configure do
 	mime_type :json, 'application/json'
+  enable :cross_origin
 end
 
 get '/' do
@@ -32,5 +38,6 @@ get '/dmz' do
 end
 
 get '/inside' do
-  'inside'
+  	content_type :json
+	return inside_json
 end
