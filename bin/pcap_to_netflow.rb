@@ -81,14 +81,14 @@ class PacketProcessor
 end
 
 in_filename = 'data/LLS_DDOS_1.0-dmz.dump'
-out_filename = 'data/dmz.json'
+out_filename = 'data/dmz-complete.json'
 
 inp = Pcap::Capture.open_offline(in_filename)
 flows = FlowProcessor.new
 pkts = PacketProcessor.new
 inp.loop(-1) do |pkt|
 	print '.' if pkts.size % 10000 == 0
-	break if pkts.size % 10000 == 0 && pkts.size != 0
+	# break if pkts.size % 10000 == 0 && pkts.size != 0
 	flows.add_packet(pkt)
 	pkts.add_packet(pkt)
 end
